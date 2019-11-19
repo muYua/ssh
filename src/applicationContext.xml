@@ -1,0 +1,132 @@
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:aop="http://www.springframework.org/schema/aop" xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:p="http://www.springframework.org/schema/p"
+	xsi:schemaLocation="
+			http://www.springframework.org/schema/beans
+			http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+			http://www.springframework.org/schema/context
+			http://www.springframework.org/schema/context/spring-context-3.0.xsd
+			http://www.springframework.org/schema/aop 
+			http://www.springframework.org/schema/aop/spring-aop-4.2.xsd
+       		http://www.springframework.org/schema/tx 
+       		http://www.springframework.org/schema/tx/spring-tx-4.2.xsd">
+	<!--在spring中配置hibernate的配置信息 -->
+	<!-- 定义数据源Bean，使用C3P0数据源实现，并注入数据源的必要信息 -->
+	<bean id="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource"
+		destroy-method="close" p:driverClass="com.mysql.cj.jdbc.Driver"
+		p:jdbcUrl="jdbc:mysql://www.izumieita.cn:3306/iem?serverTimezone=UTC" p:user="root"
+		p:password="IZUMIeita@mysql24" p:maxPoolSize="40" p:minPoolSize="2"
+		p:initialPoolSize="2" p:maxIdleTime="30" />
+		
+	<!-- 定义Hibernate的SessionFactory，SessionFactory需要依赖数据源，注入dataSource -->
+	<bean id="sessionFactory"
+		class="org.springframework.orm.hibernate5.LocalSessionFactoryBean"
+		p:dataSource-ref="dataSource">
+		<!-- annotatedClasses用来列出全部持久类,注解配置hibernate映射文件 -->
+		<property name="annotatedClasses">
+			<list>
+				<!-- 以下用来列出所有的pojo类,注解配置hibernate映射文件 -->
+				<value>cn.edu.abtc.iem.domain.User</value>
+				<value>cn.edu.abtc.iem.domain.Admin</value>
+				<value>cn.edu.abtc.iem.domain.Book</value>
+			</list>
+		</property>
+		<!-- 定义Hibernate SessionFactory的属性 -->
+		<property name="hibernateProperties">
+			<props>
+				<!-- 指定Hibernate连接的SQL 方言 -->
+				<prop key="hibernate.dialect">org.hibernate.dialect.MySQL5InnoDBDialect</prop>
+				<!-- 是否根据Hibernate映射创建数据表 -->
+				<prop key="hibernate.hbm2ddl.auto">update</prop>
+				<!-- 在控制台输出sql语句 -->
+				<prop key="hibernate.show_sql">true</prop>
+				<!-- 格式化sql语句 -->
+				<prop key="hibernate.format_sql">true</prop>
+				<prop key="connection.useUnicode">true</prop>
+				<prop key="connection.characterEncoding">utf-8</prop>
+			</props>
+		</property>
+		<!-- 指定映射文件位置 -->
+		<property name="mappingDirectoryLocations" value="classpath:cn/edu/abtc/iem/domain/"/>
+		<!-- <property name="mappingLocations">
+			<list>
+				<value>classpath:cn/edu/abtc/iem/domain/User.hbm.xml</value>
+			</list>	
+		</property> -->
+	</bean>
+	<!-- 注解方式注入 -->
+	<!-- <context:component-scan base-package="cn.edu.abtc.iem.domain" use-default-filters="false">  
+   		<context:include-filter type="annotation" expression="org.springframework.stereotype.Component"/>      
+    </context:component-scan> -->
+	<!-- 定义Service组件，并将DAO组件注入Service组件,userDaoImpl-ref中userDaoImpl应该实现setter方法 -->
+	<bean id="userService" class="cn.edu.abtc.iem.service.impl.UserServiceImpl"
+		p:userDao-ref="userDao" />
+	<!-- 定义DAO组件，并将sessionFactory注入DAO组件 -->
+	<bean id="userDao" class="cn.edu.abtc.iem.dao.impl.UserDaoImpl"
+		p:sessionFactory-ref="sessionFactory" />
+	<!-- 让Spring管理Action实例，并依赖注入业务逻辑组件 -->
+	<!-- <bean id="userAction" class="cn.edu.abtc.iem.action.impl.UserActionImpl"
+		scope="prototype" p:userService-ref="userService" /> -->
+	<bean id="userAction" class="cn.edu.abtc.iem.action.impl.UserActionImpl" scope="prototype">
+		<property name="userService" ref="userService"/>
+	</bean>
+	<!-- 定义注册bean组件 -->
+	<bean id="adminAction" class="cn.edu.abtc.iem.action.impl.AdminActionImpl"
+		scope="prototype" p:adminService-ref="adminService" p:userService-ref="userService"/>	
+	<bean id="adminService" class="cn.edu.abtc.iem.service.impl.AdminServiceImpl">
+		<property name="adminDao" ref="adminDao"/>
+	</bean>
+	<bean id="adminDao" class="cn.edu.abtc.iem.dao.impl.AdminDaoImpl" p:sessionFactory-ref="sessionFactory" />
+	
+	<bean id="bookAction" class="cn.edu.abtc.iem.action.impl.BookActionImpl">
+		<property name="bookService" ref="bookService"/>
+		<property name="userService" ref="userService"/>
+	</bean>
+	<bean id="bookService" class="cn.edu.abtc.iem.service.impl.BookServiceImpl">
+		<property name="bookDao" ref="bookDao"/>
+	</bean>
+	<bean id="bookDao" class="cn.edu.abtc.iem.dao.impl.BookDaoImpl">
+		<property name="sessionFactory" ref="sessionFactory"/>
+	</bean>
+	
+		
+	<!-- 事务详情 -->
+	<bean id="txManager" class="org.springframework.orm.hibernate5.HibernateTransactionManager">
+		<property name="sessionFactory" ref="sessionFactory" />
+	</bean>
+	
+	<!-- AOP -->	
+	<!-- 扫描包下注解 -->
+	<context:component-scan base-package="cn.edu.abtc.iem.aspect.impl"/>
+	<!-- aop 开启@AspectJ支持 日志，权限检查-->
+	<bean class="org.springframework.aop.aspectj.annotation.AnnotationAwareAspectJAutoProxyCreator"/>
+	<!-- 开启切面编程（通过配置织入@Aspectj切面 ）  -->
+	<aop:aspectj-autoproxy/>
+	<!-- xml配置aop -->
+	<aop:config><!-- <aop:aspect></aop:aspect> --></aop:config>
+	
+	<!-- 开启事务注释 -->
+	<!-- 扫描包下注解，如@Transactional -->
+	<context:component-scan base-package="cn.edu.abtc.iem.service.impl"/>
+	<tx:annotation-driven transaction-manager="txManager"/>
+	<!-- 配置通知 --><!-- 增删改 -->
+	<tx:advice id="txAdvice" transaction-manager="txManager">
+		<tx:attributes>
+			<tx:method name="insert" isolation="REPEATABLE_READ" propagation="REQUIRED" read-only="false"/>
+			<tx:method name="delete" isolation="REPEATABLE_READ" propagation="REQUIRED" read-only="false"/>
+			<tx:method name="update" isolation="REPEATABLE_READ" propagation="REQUIRED" read-only="false"/>
+			<tx:method name="update"/>
+		</tx:attributes>
+	</tx:advice>
+	<!-- 配置将通知织入目标对象
+		配置切点
+		配置切面
+	 -->
+	<aop:config>
+		<aop:pointcut expression="execution(* cn.edu.abtc.iem.service.impl.*ServiceImpl.*(..))" id="txPc"/>
+		<aop:advisor advice-ref="txAdvice" pointcut-ref="txPc"/>
+	</aop:config>
+</beans>
+
+

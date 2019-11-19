@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE struts PUBLIC
+	"-//Apache Software Foundation//DTD Struts Configuration 2.5//EN"
+	"http://struts.apache.org/dtds/struts-2.5.dtd">
+
+<struts>
+	<!-- 在URL中的Action段中是否支持斜线 -->
+	<constant name="struts.enable.SlashesInActionNames" value="true"/>
+	<!-- 指定需要Struts2处理的请求后缀 -->
+    <!-- <constant name="struts.action.extension" value="do,action"></constant> -->
+	<!-- 设置浏览器是否缓存静态内容，开发阶段应关闭，生产阶段打开，默认为打开 -->
+    <constant name="struts.serve.static.browserCache" value="false"></constant>
+    <!-- 当struts的配置文件修改后，系统是否自动重新加载该文件，默认为false，开发阶段应打开 -->
+    <constant name="struts.configuration.xml.reload" value="true"></constant>
+    <!-- 开发模式下使用，可以打印出更详细的错误信息 -->
+    <constant name="struts.devMode" value="true"></constant>
+    <!-- 自动动态方法的调用，使用这个设置后可以这样调用：action#method -->
+    <constant name="struts.enable.DynamicMethodInvocation" value="true" />
+    <!-- 用于配置包名后缀。默认为action、actions、struts-->
+    <!-- <constant name="struts.convention.package.locators" value="actions" /> -->
+    <!-- 用于配置类名后缀，默认为Action，设置后，Struts2只会去找这种后缀名的类做映射 -->
+    <constant name="struts.convention.action.suffix" value="ActionImpl"/>
+    <!-- 设置即使没有@Action注释，依然创建Action映射。默认值是false。因为Convention-Plugin是约定优于配置的风格，
+        可以不通过注解根据预先的定义就能访问相应Action中的方法 -->
+    <constant name="struts.convention.action.mapAllMatches" value="true"/>
+    <!-- 自定义jsp文件命名的分隔符 -->
+    <constant name="struts.convention.action.name.separator" value="-" />
+    <!-- 国际化资源文件名称 -->
+    <constant name="struts.custom.i18n.resources" value="i18n" />
+    <!-- 是否自动加载国际化资源文件  -->
+    <constant name="struts.i18n.reload" value="true" />
+    <!-- 浏览器是否缓存静态内容 -->
+    <constant name="struts.serve.static.browserCache" value="false" />
+    <!-- 上传文件大小限制设置 -->
+    <constant name="struts.multipart.maxSize" value="-1" />
+    <!-- 主题，将值设置为simple，即不使用UI模板。这将不会生成额外的html标签 -->
+    <constant name="struts.ui.theme" value="simple" />
+    <!-- 编码格式 -->
+    <constant name="struts.i18n.encoding" value="UTF-8" />
+    <!-- 
+    	struts2.5+需要配置global-allowed-methods才能使用自定义方法，否则就默认的几个方法eg.execute()
+    	global-allowed-methods:设置package的全局能使用的方法
+    	regex:.*Method:枚举*Method方法
+    	strict-method-invocation:严格的方法检查，flase掉好使用自定义方法
+    	* 通配符 {1}占位符 配套使用
+    	/WEB-INF下的文件不能直接调用访问 eg.通过href="xx"就会报404
+    -->
+    
+	<package name="default" namespace="/" extends="struts-default" strict-method-invocation="false">
+		<!-- 所有拦截器和拦截栈 -->
+		<interceptors>
+			<!-- 通过指定拦截器名和拦截器实现类来实现拦截器 -->
+			<interceptor name="adminIntercrptor" class="cn.edu.abtc.iem.interceptors.AdminInterceptor">
+				<!-- 为拦截器指定参数值 -->
+				<!-- <param name="name">user测试拦截器</param> -->
+				<param name="excludeMethods">regMethod,loginMethod,logoutMethod</param>
+			</interceptor>
+			<!-- <interceptor name="name1" class="">
+				<param name="name">a</param>
+			</interceptor> -->
+			<!-- 拦截器栈 -->
+			<!-- <interceptor-stack name="stack">
+				<interceptor-ref name="userIntercrptor"/>
+				<interceptor-ref name="name1"/>
+			</interceptor-stack> -->
+		</interceptors>	
+		<!-- 配置该包下的默认拦截器——既可以是拦截器，也可以是拦截器栈 ,struts-default中有写-->
+		<default-interceptor-ref name="defaultStack"/>
+	</package>
+	
+	<package name="user" namespace="/" extends="default" strict-method-invocation="false">	
+		<!--全局结果处理  -->
+		<global-results>
+			<result name="error">error.jsp</result>
+		</global-results>
+		<!-- 配置Action -->
+		<global-allowed-methods>regex:.*Method</global-allowed-methods> 
+		<action name="go_*" class="userAction" method="{1}Method">
+			<result>/WEB-INF/jsp/main.jsp</result>
+			<result name="toMain" type="redirectAction">go_toMain</result>
+			<result name="default">/WEB-INF/jsp/{1}.jsp</result>
+			<result name="query">/WEB-INF/jsp/main.jsp</result>
+			<result name="update">/WEB-INF/jsp/toUpdate.jsp</result>
+			<result name="add">/WEB-INF/jsp/toAdd.jsp</result>
+			<result name="reg">reg.jsp</result>
+			<result name="login">login.jsp</result>
+
+			<!-- 拦截器 -->
+			<!-- 配置系统默认的默认拦截器 -->
+			<interceptor-ref name="defaultStack"/>
+			<!-- 应用自定义的userIntercrptor拦截器 -->
+			<interceptor-ref name="adminIntercrptor">
+				<param name="name">改名后的拦截器</param>
+				<!-- 拦截方法，哪些方法除外 -->
+				<!-- <param name="excludeMethods">regMethod,loginMethod,logoutMethod</param> -->
+			</interceptor-ref>
+			<!-- <interceptor-ref name=""> -->
+				<!-- 拦截方法，哪些方法除外 -->
+				<!-- <param name="excludeMethods"></param> -->
+				<!-- 拦截方法，拦截包含方法 -->
+				<!-- <param name="includeMethods">loginMethod</param> -->
+			<!-- </interceptor-ref> -->
+			<!-- 应用自定义拦截器栈 -->
+			<!-- <interceptor-ref name="stack"> -->
+				<!-- 覆盖拦截器栈中指定拦截器中的参数 -->
+				<!-- <param name="name1.name">ab</param> -->
+			<!-- </interceptor-ref>	 -->	
+		</action>
+	</package>
+	<package name="admin" namespace="/admin" extends="default" strict-method-invocation="false">	
+		<!--全局结果处理  -->
+		<global-results>
+			<result name="error">/error.jsp</result>
+		</global-results>
+		<!-- 配置Action -->
+		<global-allowed-methods>regex:.*</global-allowed-methods> 
+		<action name="go_*" class="adminAction" method="{1}">
+			<result name="main">/WEB-INF/jsp/main.jsp</result>
+			<result name="admin">/WEB-INF/jsp/admin.jsp</result>
+			<result name="toMain" type="redirectAction">go_toMain</result>
+			<result name="toAdmin" type="redirectAction">go_toAdmin</result>
+			<result name="default">/WEB-INF/jsp/{1}.jsp</result>
+			<result name="updateAdmin">/WEB-INF/jsp/toUpdateAdmin.jsp</result>
+			<result name="addAdmin">/WEB-INF/jsp/toAddAdmin.jsp</result>
+			<result name="reg">/reg.jsp</result>
+			<result name="login">/login.jsp</result>
+
+			<!-- 拦截器 -->
+			<!-- 配置系统默认的默认拦截器 -->
+			<interceptor-ref name="defaultStack"/>
+			<!-- 应用自定义的userIntercrptor拦截器 -->
+			<interceptor-ref name="adminIntercrptor">
+				<param name="name">改名后的拦截器</param>
+				<!-- 拦截方法，哪些方法除外 -->
+				<param name="excludeMethods">reg,login,logout</param>
+			</interceptor-ref>
+		</action>
+	</package>
+	<package name="book" namespace="/book" extends="default" strict-method-invocation="false">	
+		<!--全局结果处理  -->
+		<global-results>
+			<result name="error">/error.jsp</result>
+		</global-results>
+		<!-- 配置Action -->
+		<global-allowed-methods>regex:.*</global-allowed-methods> 
+		<action name="go_*" class="bookAction" method="{1}">
+			<result name="book">/WEB-INF/jsp/book.jsp</result>
+			<result name="toBook" type="redirectAction">go_toBook</result>
+			<result name="default">/WEB-INF/jsp/{1}Book.jsp</result>
+			<result name="toUpdateBook">/WEB-INF/jsp/toUpdateBook.jsp</result>
+			<result name="toAddBook">/WEB-INF/jsp/toAddBook.jsp</result>
+			<result name="reg">/reg.jsp</result>
+			<result name="login">/login.jsp</result>
+			<!-- 拦截器 -->
+			<!-- 配置系统默认的默认拦截器 -->
+			<interceptor-ref name="defaultStack"/>
+			<!-- 应用自定义的userIntercrptor拦截器 -->
+			<interceptor-ref name="adminIntercrptor">
+				<!-- <param name="name">改名后的拦截器</param> -->
+				<!-- 拦截方法，哪些方法除外 -->
+				<!-- <param name="excludeMethods">reg,login,logout</param> -->
+			</interceptor-ref>
+		</action>
+	</package>
+</struts>

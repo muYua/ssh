@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<web-app id="WebApp_9" version="2.4" xmlns="http://java.sun.com/xml/ns/j2ee"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee http://java.sun.com/xml/ns/j2ee/web-app_2_4.xsd">
+
+	<display-name>iem</display-name>
+
+	<!-- <filter>
+		<filter-name>struts-prepare</filter-name>
+		<filter-class>org.apache.struts2.dispatcher.filter.StrutsPrepareFilter</filter-class>
+	</filter>
+
+	<filter>
+		<filter-name>struts-execute</filter-name>
+		<filter-class>org.apache.struts2.dispatcher.filter.StrutsExecuteFilter</filter-class>
+	</filter>
+
+	<filter-mapping>
+		<filter-name>struts-prepare</filter-name>
+		<url-pattern>/*</url-pattern>
+	</filter-mapping>
+
+	<filter-mapping>
+		<filter-name>struts-execute</filter-name>
+		<url-pattern>/*</url-pattern>
+	</filter-mapping> -->
+	<filter>
+		<filter-name>struts2</filter-name>
+		<filter-class>org.apache.struts2.dispatcher.filter.StrutsPrepareAndExecuteFilter</filter-class>
+	</filter>
+	<filter-mapping>
+		<filter-name>struts2</filter-name>
+		<url-pattern>/*</url-pattern>
+	</filter-mapping> 
+	
+	
+	<!-- 通过自定义contextListener获取web.xml中配置的参数
+	1.容器启动时，找到配置文件中的context-param作为键值对放到ServletContext中
+	2.然后找到listener，容器调用它的contextInitialized(ServletContextEvent event)方法，执行其中的操作 -->
+	
+	
+	<!--通过指定context参数，让Spring使用AnnotationConfigWebApplicationContext启动容器而非XmlWebApplicationContext   默认没配置时是使用XmlWebApplicationContext-->
+<!--     <context-param>
+        <param-name>contextClass</param-name>
+        <param-value>
+            org.springframework.web.context.support.AnnotationConfigWebApplicationContext
+        </param-value>
+    </context-param> -->
+	<!--指定标注了@Configuration的类，多个可以用逗号分隔-->
+<!--     <context-param>
+        <param-name>contextConfigLocation</param-name>
+        <param-value>com.example.Car,com.example.Boss</param-value>
+    </context-param> -->
+	
+	
+	<!-- 设置web全局初始化参数，设置配置文件位置 * 名称#contextConfigLocation 固定值 * 值# “classpath:”表示类路径（src） 
+	也可以有子包 # classspath:com/XX/applicationContext.xml -->
+	<context-param>
+		<param-name>contextConfigLocation</param-name>
+		<param-value>classpath:applicationContext.xml</param-value>
+	</context-param>
+	
+	<!-- 配置监听器，用于加载spring 配置文件 -->
+	<listener>
+		<listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
+	</listener>
+
+
+	<welcome-file-list>
+		<welcome-file>login.jsp</welcome-file>
+	</welcome-file-list>
+	
+	
+	
+	
+</web-app>

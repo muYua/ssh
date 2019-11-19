@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping package="cn.edu.abtc.iem.domain">
+	<!-- table 对象映射的表名
+		column 对象属性映射表的字段 	
+		property 多用于赋值
+	 -->
+	<class name="User" table="ssh_user">
+		<id name="id" column="user_id" type="java.lang.Integer">
+			<generator class="increment"/>
+		</id>
+		<property name="userName" column="user_name" type="java.lang.String" length="30"></property>
+        <property name="password" column="user_password" type="java.lang.String" length="32"></property>
+	</class>
+
+</hibernate-mapping>
